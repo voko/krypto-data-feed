@@ -1,0 +1,31 @@
+{
+  "name": "@krypto-data/dlt-calculator",
+  "version": "1.0.0",
+  "description": "KriptoStream DLT Data Feed - interactive integer calculator",
+  "type": "module",
+  "main": "src/calculator.js",
+  "bin": {
+    "krypto-calc": "src/cli.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/cli.js",
+    "test": "node --test",
+    "test:watch": "node --test --watch"
+  },
+  "files": [
+    "src"
+  ],
+  "keywords": [
+    "kriptostream",
+    "dlt",
+    "jfrog"
+  ],
+  "license": "UNLICENSED",
+  "dependencies": {
+    "lodash": "4.17.21",
+    "picocolors": "1.1.1"
+  }
+}

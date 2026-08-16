@@ -1,0 +1,19 @@
+node_modules/
+
+# Credentials - never commit these
+.env
+.npmrc
+*.token
+
+# Build / lab output
+dlt-manifest.txt
+*-sbom.json
+*-sbom.xml
+dry-run-report.csv
+.jfrog/
+
+# OS / editor noise
+.DS_Store
+*.swp
+.idea/
+.vscode/

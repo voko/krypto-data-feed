@@ -1,0 +1,14 @@
+# Resolve dependencies through Artifactory instead of npmjs.org directly.
+#
+# Copy to .npmrc (git-ignored) and fill in a token, or better, let the JFrog
+# CLI write it for you:
+#
+#   jf npm-config --repo-resolve krypto-data-npm-dev \
+#                 --repo-deploy  krypto-data-npm-dev-local
+#
+# Developers point at the VIRTUAL repository, never at the local or remote
+# directly: if KriptoStream later swaps npmjs.org for an internal mirror, the
+# admin changes the virtual repo and nobody reconfigures anything.
+
+registry=https://kripto1abs.jfrog.io/artifactory/api/npm/krypto-data-npm-dev/
+//kripto1abs.jfrog.io/artifactory/api/npm/krypto-data-npm-dev/:_authToken=${JF_ACCESS_TOKEN}

@@ -1,0 +1,109 @@
+# Lab 3 deliverable - TEMPLATE.
+#
+# Rename to `jfrog-oidc.yml` during Lab 3. It ships as `.example` so that
+# authoring the workflow stays a real exercise; use this as the reference
+# solution, not as a shortcut.
+#
+#   git mv .github/workflows/jfrog-oidc.yml.example \
+#          .github/workflows/jfrog-oidc.yml
+#
+# Prerequisites (Lab 3, Tasks 1-2):
+#   - OIDC provider `krypto-data-github-oidc` exists in Artifactory
+#   - Identity mapping pins the claim { "repository": "voko/krypto-data-feed" }
+#
+# There is deliberately NO access-token secret anywhere in this file. If you
+# find yourself adding one, the OIDC handshake is misconfigured - fix the
+# handshake rather than falling back to a stored credential.
+
+name: KriptoStream DLT Build (OIDC)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write # REQUIRED: lets the runner request a GitHub OIDC token
+  contents: read
+
+env:
+  JF_URL: https://kripto1abs.jfrog.io
+  REGISTRY: kripto1abs.jfrog.io
+  JFROG_CLI_BUILD_NAME: krypto-build
+  JFROG_CLI_BUILD_NUMBER: ${{ github.run_number }}
+  JFROG_CLI_BUILD_PROJECT: krypto-data
+  DOCKER_REPO: krypto-data-docker-dev-local
+  IMAGE_NAME: dlt-calculator
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # build-add-git needs real history; the default shallow clone leaves
+          # the VCS tab empty, which is exactly the checkpoint that would fail.
+          fetch-depth: 0
+
+      - name: Setup JFrog CLI (OIDC - no secrets)
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: ${{ env.JF_URL }}
+        with:
+          oidc-provider-name: krypto-data-github-oidc
+          oidc-audience: krypto-data-github-oidc
+
+      - name: Verify connectivity
+        run: jf rt ping
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # ---- npm through Artifactory -------------------------------------------------
+      - name: Point npm at Artifactory
+        run: |
+          jf npm-config \
+            --repo-resolve krypto-data-npm-dev \
+            --repo-deploy  krypto-data-npm-dev-local
+
+      - name: Install dependencies (resolved through Artifactory)
+        run: jf npm install
+
+      - name: Run unit tests
+        run: npm test
+
+      # ---- Docker through Artifactory ----------------------------------------------
+      - name: Authenticate the Docker client
+        run: jf docker login
+
+      - name: Build the container image
+        run: |
+          docker build \
+            --build-arg BASE_IMAGE="$REGISTRY/krypto-data-docker-prod-local/dlt-base:3.19" \
+            -t "$REGISTRY/$DOCKER_REPO/$IMAGE_NAME:${{ github.run_number }}" \
+            .
+
+      - name: Push the image (recorded as Build Info)
+        run: jf docker push "$REGISTRY/$DOCKER_REPO/$IMAGE_NAME:${{ github.run_number }}"
+
+      # ---- Traceability ------------------------------------------------------------
+      - name: Create the DLT manifest
+        run: |
+          {
+            echo "KriptoStream DLT Data Feed"
+            echo "commit:  ${{ github.sha }}"
+            echo "run:     ${{ github.run_number }}"
+            echo "built:   $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          } > dlt-manifest.txt
+
+      - name: Upload the manifest
+        run: jf rt upload dlt-manifest.txt krypto-data-npm-dev-local/manifests/
+
+      - name: Collect environment and git metadata
+        run: |
+          jf rt build-collect-env
+          jf rt build-add-git
+
+      - name: Publish Build Info
+        run: jf rt build-publish

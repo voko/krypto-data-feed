@@ -1,0 +1,59 @@
+# Lab 5 deliverable - TEMPLATE.
+#
+# Rename to `frogbot-scan-pr.yml` during Lab 5. It ships as `.example` so that
+# authoring the workflow stays a real exercise; use this as the reference
+# solution, not as a shortcut.
+#
+#   git mv .github/workflows/frogbot-scan-pr.yml.example \
+#          .github/workflows/frogbot-scan-pr.yml
+#
+# Prerequisites (Lab 5, Task 1) - repository secrets:
+#   JF_URL           https://kripto1abs.jfrog.io
+#   JF_ACCESS_TOKEN  Artifactory token, scoped to the krypto-data project
+#   JF_GIT_TOKEN     GitHub PAT with pull-request write access
+#
+# Then make the gate binding: Settings -> Branches -> protect `main` ->
+# "Require status checks to pass before merging" -> select this check.
+
+name: Frogbot Scan Pull Request (KriptoStream)
+
+on:
+  pull_request_target:
+    types: [opened, synchronize]
+
+permissions:
+  pull-requests: write # REQUIRED: post findings as a PR comment
+  contents: read
+  security-events: write # upload results to GitHub code scanning
+
+jobs:
+  scan-pull-request:
+    runs-on: ubuntu-latest
+    # Gates fork PRs behind a manual approval before secrets are exposed - the
+    # standard safety net for pull_request_target. Create the environment under
+    # Settings -> Environments and add yourself as a required reviewer.
+    environment: frogbot
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: jfrog/frogbot@v2
+        env:
+          JF_URL: ${{ secrets.JF_URL }}
+          JF_ACCESS_TOKEN: ${{ secrets.JF_ACCESS_TOKEN }}
+          JF_GIT_TOKEN: ${{ secrets.JF_GIT_TOKEN }}
+
+          # Bind the PR gate to the governance built in Labs 1 and 4:
+          #   JF_WATCHES -> krypto-data-dev-watch
+          #              -> policy krypto-data-security-block
+          #              -> rule Block-High-Critical (min severity High)
+          JF_PROJECT: krypto-data
+          JF_WATCHES: krypto-data-dev-watch
+
+          # Fail the check on a violation, so the merge is blocked rather than
+          # merely commented on.
+          JF_FAIL: "true"
+
+          # Resolve dependencies through Artifactory, not straight from npmjs.
+          JF_INSTALL_DEPS_CMD: "npm ci --registry=${{ secrets.JF_URL }}/artifactory/api/npm/krypto-data-npm-dev/"
