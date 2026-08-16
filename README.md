@@ -37,14 +37,14 @@ second integer  > 0
 
 ### Layout
 
-| Path | Role |
-| --- | --- |
-| `src/calculator.js` | Pure arithmetic. No I/O, no dependencies — every function is total in its arguments. |
-| `src/parse.js` | Input validation. This is where **lodash** is genuinely used, and where Lab 5's vulnerable downgrade lands. |
-| `src/cli.js` | Thin I/O shell: the prompt loop and signal handling. |
-| `test/` | Unit tests for the two pure modules. |
-| `scripts/migrate-legacy-images.sh` | Lab 2 deliverable — bulk lift-and-shift of legacy Docker images. |
-| `.github/workflows/*.example` | Reference solutions for Labs 3 and 5, shipped unarmed. |
+| Path                               | Role                                                                                                        |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `src/calculator.js`                | Pure arithmetic. No I/O, no dependencies — every function is total in its arguments.                        |
+| `src/parse.js`                     | Input validation. This is where **lodash** is genuinely used, and where Lab 5's vulnerable downgrade lands. |
+| `src/cli.js`                       | Thin I/O shell: the prompt loop and signal handling.                                                        |
+| `test/`                            | Unit tests for the two pure modules.                                                                        |
+| `scripts/migrate-legacy-images.sh` | Lab 2 deliverable — bulk lift-and-shift of legacy Docker images.                                            |
+| `.github/workflows/*.example`      | Reference solutions for Labs 3 and 5, shipped unarmed.                                                      |
 
 The split is deliberate: parsing and arithmetic are pure and therefore worth unit-testing,
 while `cli.js` is the untestable edge that just moves bytes.
@@ -86,10 +86,10 @@ The container runs as an unprivileged `krypto` user.
 
 ## Dependencies
 
-| Package | Version on `main` | Why |
-| --- | --- | --- |
-| `lodash` | `4.17.21` (exact) | String/collection helpers in `src/parse.js` |
-| `picocolors` | `1.1.1` (exact) | Terminal colour, ~2 kB, no transitive dependencies |
+| Package      | Version on `main` | Why                                                |
+| ------------ | ----------------- | -------------------------------------------------- |
+| `lodash`     | `4.17.21` (exact) | String/collection helpers in `src/parse.js`        |
+| `picocolors` | `1.1.1` (exact)   | Terminal colour, ~2 kB, no transitive dependencies |
 
 Versions are pinned exactly rather than floated with `^`. A caret range means the artifact you
 scanned and the artifact you ship can differ, which is precisely what the DLTC-01 chain of
@@ -106,10 +106,10 @@ custody exists to prevent.
 Both GitHub Actions workflows ship as `.example` files, because authoring them *is* the lab.
 Use them as reference solutions after you have written your own.
 
-| File | Lab | Rename to |
-| --- | --- | --- |
-| `.github/workflows/jfrog-oidc.yml.example` | 3 | `jfrog-oidc.yml` |
-| `.github/workflows/frogbot-scan-pr.yml.example` | 5 | `frogbot-scan-pr.yml` |
+| File                                            | Lab | Rename to             |
+| ----------------------------------------------- | --- | --------------------- |
+| `.github/workflows/jfrog-oidc.yml.example`      | 3   | `jfrog-oidc.yml`      |
+| `.github/workflows/frogbot-scan-pr.yml.example` | 5   | `frogbot-scan-pr.yml` |
 
 ```bash
 git mv .github/workflows/jfrog-oidc.yml.example .github/workflows/jfrog-oidc.yml
@@ -123,11 +123,11 @@ credentials anywhere, only a short-lived OIDC token.
 
 ## How this repo maps to the labs
 
-| Lab | What it does with this repository |
-| --- | --- |
-| 1 | Creates the repositories this project publishes into |
-| 2 | Migrates the base image the `Dockerfile` builds FROM; `scripts/migrate-legacy-images.sh` is the deliverable |
-| 3 | OIDC-authenticated build; publishes Build Info and the SBOM listing these dependencies |
-| 4 | The Xray watch that gates the image this repo pushes |
-| 5 | The vulnerable-lodash pull request and the Frogbot gate that blocks it |
-| 6 | Retention policy that cleans up the dev images CI accumulates |
+| Lab | What it does with this repository                                                                           |
+| --- | ----------------------------------------------------------------------------------------------------------- |
+| 1   | Creates the repositories this project publishes into                                                        |
+| 2   | Migrates the base image the `Dockerfile` builds FROM; `scripts/migrate-legacy-images.sh` is the deliverable |
+| 3   | OIDC-authenticated build; publishes Build Info and the SBOM listing these dependencies                      |
+| 4   | The Xray watch that gates the image this repo pushes                                                        |
+| 5   | The vulnerable-lodash pull request and the Frogbot gate that blocks it                                      |
+| 6   | Retention policy that cleans up the dev images CI accumulates                                               |
